@@ -56,6 +56,7 @@ ZeissHub g_hub;
 // Zeiss Devices
 const char* g_ZeissDeviceName = "ZeissScope";
 const char* g_ZeissReflector = "ZeissReflectorTurret";
+const char* g_ZeissDualReflector = "ZeissDualReflectorTurret";
 const char* g_ZeissNosePiece = "ZeissObjectiveTurret";
 const char* g_ZeissNeutralDensityWheel1RL = "ZeissNDWheel1RL";
 const char* g_ZeissNeutralDensityWheel2RL = "ZeissNDWheel2RL";
@@ -93,6 +94,7 @@ const char* g_ZeissHXPShutter = "ZeissHXPShutter";
 
 // List of Device numbers (from Zeiss documentation)
 ZeissUByte g_ReflectorChanger = 0x01;
+ZeissUByte g_ZeissDualReflectorChanger = 0x46;
 ZeissUByte g_NosePieceChanger = 0x02;
 ZeissUByte g_NeutralDensityWheel1RL = 0x05; // Called Filter wheel 1 in docs
 ZeissUByte g_NeutralDensityWheel2RL = 0x06; // Called Filter wheel 2 in docs
@@ -139,6 +141,7 @@ MODULE_API void InitializeModuleData()
 {
    RegisterDevice(g_ZeissDeviceName, MM::GenericDevice, "Zeiss AxioObserver controlled through serial interface");
    RegisterDevice(g_ZeissReflector, MM::StateDevice, "Reflector Turret (dichroics)");
+   RegisterDevice(g_ZeissDualReflector, MM::StateDevice, "Dual Reflector Turret (dichroics and emission)");
    RegisterDevice(g_ZeissNosePiece, MM::StateDevice, "Objective Turret");
    RegisterDevice(g_ZeissNeutralDensityWheel1RL, MM::StateDevice, "ND Filter Wheel 1 Fluorescence Light Path");
    RegisterDevice(g_ZeissNeutralDensityWheel2RL, MM::StateDevice, "ND Filter Wheel 2 Fluorescence Light Path");
@@ -188,6 +191,8 @@ MODULE_API MM::Device* CreateDevice(const char* deviceName)
         return new ZeissScope();
    else if (strcmp(deviceName, g_ZeissReflector) == 0)
         return new ReflectorTurret(g_ReflectorChanger, g_ZeissReflector, "Reflector Turret");
+   else if (strcmp(deviceName, g_ZeissReflector) == 0)
+        return new ReflectorTurret(g_ZeissDualReflectorChanger, g_ZeissDualReflector, "Dual Reflector Turret");
    else if (strcmp(deviceName, g_ZeissNosePiece) == 0)
         return new ObjectiveTurret(g_NosePieceChanger, g_ZeissNosePiece, "Objective Turret");
    else if (strcmp(deviceName, g_ZeissNeutralDensityWheel1RL) == 0)
