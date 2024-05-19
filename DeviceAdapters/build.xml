@@ -1,7 +1,7 @@
 <project name="mm.deviceadapters">
 	<macrodef name="run-all">
 		<attribute name="target"/>
-		<attribute name="failonerror" default="true"/>
+		<attribute name="failonerror" default="false"/>
 		<sequential>
 			<subant target="@{target}" failonerror="@{failonerror}">
 				<fileset dir="." includes="*/build.xml"/>
@@ -12,7 +12,7 @@
 	</macrodef>
 
 	<!-- Default -->
-	<property name="mm.build.failonerror" value="true"/>
+	<property name="mm.build.failonerror" value="false"/>
 
 	<target name="install">
 		<run-all target="install" failonerror="${mm.build.failonerror}"/>
