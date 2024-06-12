@@ -340,7 +340,7 @@ class ColibriModel
       ZeissByte GetMode();
       void SetMode (ZeissByte mode);
 
-      static const int NRLEDS = 4;
+      static const int NRLEDS = 6; // 6 Total LED Positions for Colibri 7 TODO: Is there a way to query Colibri to get NRLEDS
       LEDInfo info_[NRLEDS];
       std::string infoString_[NRLEDS];
       bool available_[NRLEDS];

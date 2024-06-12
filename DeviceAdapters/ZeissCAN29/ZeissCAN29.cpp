@@ -2782,7 +2782,7 @@ int Colibri::Initialize()
          ret = CreateProperty(os.str().c_str(), "0", MM::Integer, false, pActEx);
          if (ret != DEVICE_OK)
                return ret;
-         SetPropertyLimits(os.str().c_str(), 0, 100);
+         SetPropertyLimits(os.str().c_str(), 0, 100); // This might be worth looking into (Zeiss colibri 7 doesn't understand 0) - small offset may work
          
          pActEx = new CPropertyActionEx(this, &Colibri::OnName, i);
          std::ostringstream ns;
@@ -2865,6 +2865,9 @@ int Colibri::OnExternalShutter(MM::PropertyBase* pProp, MM::ActionType eAct)
 
 /**
  * Translate Intensity to percentages, just like the Colibri controller does
+ * NOTE: Colibri 7 doesn't accept and intensity of zero without bugging out, so we set 
+ *  the 0% value as displayed in the gui to an intensity value of 1. Wiht the 
+ * corresponding change in handling set in the Colibri::SetOpen(bool open) function
  */
 int Colibri::OnIntensity(MM::PropertyBase* pProp, MM::ActionType eAct, long index)
 {
@@ -2872,11 +2875,23 @@ int Colibri::OnIntensity(MM::PropertyBase* pProp, MM::ActionType eAct, long inde
 
    if (eAct==MM::BeforeGet) {
       double intensity = (double) g_hub.colibriModel_.GetBrightness(index);
-      pProp->Set(floor(intensity/calibrationValue * 100));
+      if (intensity == 1) {
+         pProp->Set((double) 0);
+      } else {
+         pProp->Set(floor(intensity/calibrationValue * 100));
+      }
    } else if (eAct == MM::AfterSet) {
       long intensity;
       pProp->Get(intensity);
-      if (intensity != (long) ((double)g_hub.colibriModel_.GetBrightness(index)/calibrationValue * 100)) {
+      if (intensity == 0) {
+         if ((long) (double)g_hub.colibriModel_.GetBrightness(index) != 1) {
+            int ret = g_hub.ColibriBrightness(*this, *GetCoreCallback(),
+                                          index, (ZeissShort) 1);
+            if (ret != DEVICE_OK)
+               return ret;
+         }
+      }
+      else if (intensity != (long) ((double)g_hub.colibriModel_.GetBrightness(index)/calibrationValue * 100)) {
          int ret = g_hub.ColibriBrightness(*this, *GetCoreCallback(),
                                        index, (ZeissShort) ceil ((double)intensity/100.0 * calibrationValue));
          if (ret != DEVICE_OK)
@@ -2936,7 +2951,7 @@ int Colibri::OnInfo(MM::PropertyBase* pProp, MM::ActionType eAct, long index)
 
 /**
  * Switches LEDS or external shutter depending on flag useExternalShutter
- * Only switch on LEDs that have their intensity set higher than 0
+ * Only switch on LEDs that have their intensity set higher than 0 (For now anything != 1 as 0 seems to break Colibri 7)
  */
 int Colibri::SetOpen(bool open)
 {
@@ -2949,7 +2964,7 @@ int Colibri::SetOpen(bool open)
    } else {
       // Note: should the operation mode be checked here?
       for (int i=0; i<g_hub.colibriModel_.NRLEDS; i++) {
-         if (g_hub.colibriModel_.GetBrightness(i) != 0 && 
+         if (g_hub.colibriModel_.GetBrightness(i) != 1 &&
                g_hub.colibriModel_.available_[i]  &&
                ( (g_hub.colibriModel_.GetOnOff(i) == 2) != open) ) {
             ret = g_hub.ColibriOnOff(*this, *GetCoreCallback(), (ZeissByte) i, open);
